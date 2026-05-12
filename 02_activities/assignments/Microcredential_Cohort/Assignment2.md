@@ -57,8 +57,144 @@ The store wants to keep customer addresses. Propose two architectures for the CU
 
 ```
 Your answer...
-```
+### Prompt 1 — Logical Model for a Small Bookstore
 
+This logical model represents a small bookstore. It includes the required entities: Employee, Order, Sales (Order_Line), Customer, Book, and a Date table.
+
+**BOOK**
+- book_id (Primary Key)  
+- title  
+- author  
+- genre  
+- isbn  
+- price  
+- publication_date_id (Foreign Key → DATE.date_id)
+
+**CUSTOMER**
+- customer_id (Primary Key)  
+- first_name  
+- last_name  
+- email  
+- phone  
+
+**EMPLOYEE**
+- employee_id (Primary Key)  
+- first_name  
+- last_name  
+- role  
+- hire_date_id (Foreign Key → DATE.date_id)
+
+**ORDER**
+- order_id (Primary Key)  
+- customer_id (Foreign Key → CUSTOMER.customer_id)  
+- employee_id (Foreign Key → EMPLOYEE.employee_id)  
+- order_date_id (Foreign Key → DATE.date_id)  
+- total_amount  
+
+**ORDER_LINE (Sales)**
+- order_line_id (Primary Key)  
+- order_id (Foreign Key → ORDER.order_id)  
+- book_id (Foreign Key → BOOK.book_id)  
+- quantity  
+- unit_price  
+
+**DATE**
+- date_id (Primary Key)  
+- full_date  
+- year  
+- quarter  
+- month  
+- day  
+- day_of_week  
+- is_weekend  
+
+*Relationships*
+- One Customer can place many Orders  
+- One Employee can process many Orders  
+- One Order can contain many Order_Line records  
+- One Book can appear in many Order_Line records  
+- The Date table links to Order, Employee, and Book for consistent date tracking
+```
+Prompt 2
+SHIFT
+
+-shift_id (Primary Key)
+
+-shift_name (e.g., “Morning”, “Evening”)
+
+-start_time
+
+-end_time
+
+EMPLOYEE_SHIFT
+
+-employee_shift_id (Primary Key)
+
+-employee_id (Foreign Key → EMPLOYEE.employee_id)
+
+-shift_id (Foreign Key → SHIFT.shift_id)
+
+-shift_date_id (Foreign Key → DATE.date_id)
+
+Relationships
+
+-One Employee can have many Employee_Shift records
+
+-One Shift can be assigned to many employees
+
+-One Date can be associated with many shifts worked
+
+The bookstore wants to store customer addresses and handle changes over time. Below are two possible designs: one that overwrites old addresses and one that keeps historical versions.
+
+Architecture 1 — Overwrite Changes (Type 1 SCD)
+CUSTOMER_ADDRESS
+
+-customer_id (Primary Key, FK → CUSTOMER.customer_id)
+
+-street
+
+-city
+
+-province
+
+-postal_code
+
+-country
+
+Behavior:  
+When a customer moves, the existing row is updated with the new address. The previous address is not stored.
+
+Classification:  
+This is a Type 1 Slowly Changing Dimension, because changes overwrite old data and no history is preserved.
+
+Architecture 2 — Retain History (Type 2 SCD)
+CUSTOMER_ADDRESS_HISTORY
+
+-address_id (Primary Key)
+
+-customer_id (FK → CUSTOMER.customer_id)
+
+-street
+
+-city
+
+-province
+
+-postal_code
+
+-country
+
+-effective_start_date
+
+-effective_end_date
+
+-is_current
+
+Behavior:  
+When a customer moves, a new row is inserted with a new start date. The previous row is closed with an end date. Only one row per customer has is_current = 1.
+
+Classification:  
+This is a Type 2 Slowly Changing Dimension, because each change creates a new version and historical addresses are retained.
 ***
 
 ## Section 2:
